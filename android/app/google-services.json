@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1023308371527",
+    "project_id": "dombaku-974fe",
+    "storage_bucket": "dombaku-974fe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1023308371527:android:356d10cd52a00856d98362",
+        "android_client_info": {
+          "package_name": "com.example.dombaku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJJ_qZkoGfQrYax21bOG068Az3tB4fyCA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
