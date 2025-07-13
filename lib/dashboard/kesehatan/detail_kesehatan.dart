@@ -93,6 +93,7 @@ class _DetailKesehatanPageState extends State<DetailKesehatanPage> {
           child: Text(
             "Informasi Kesehatan Terkini",
             style: TextStyle(
+              fontFamily: 'Exo2',
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.teal.shade800,
@@ -125,6 +126,7 @@ class _DetailKesehatanPageState extends State<DetailKesehatanPage> {
                 Text(
                   label,
                   style: const TextStyle(
+                    fontFamily: 'Exo2',
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                     color: Colors.black87,
@@ -133,7 +135,11 @@ class _DetailKesehatanPageState extends State<DetailKesehatanPage> {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(fontSize: 14, color: Colors.black54),
+                  style: const TextStyle(
+                    fontFamily: 'Exo2',
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
                 ),
               ],
             ),

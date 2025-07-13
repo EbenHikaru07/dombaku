@@ -1,14 +1,15 @@
+import 'dart:async';
+
 import 'package:dombaku/dashboard/Bagian/activity_summary.dart';
 import 'package:dombaku/dashboard/Bagian/kategori_menu.dart';
-import 'package:dombaku/scan_object.dart';
+import 'package:dombaku/dashboard/carousel/carousel.dart';
+import 'package:dombaku/dashboard/notification_services.dart';
 import 'package:dombaku/session/user_session.dart';
 import 'package:dombaku/starting/login.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:dombaku/carousel/carousel.dart';
 import 'package:dombaku/dashboard/notification.dart';
-import 'package:dombaku/bottombar/bottom_navbar.dart';
 // import 'package:dombaku/kategori_menu/catatan_ternak.dart';
 // import 'package:dombaku/kategori_menu/manajemen_kandang.dart';
 // import 'package:dombaku/kategori_menu/rekomendasi_kawin.dart';
@@ -26,22 +27,34 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  int _selectedIndex = 0;
-  int _notificationCount = 3;
+  int _notificationCount = 0;
   final String _currentDate = getCurrentDate();
   String _username = '';
   String _email = '';
+  String _peternak = '';
   bool isPressed = false;
+  late final StreamSubscription _notifSubscription;
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.selectedIndex;
     loadUserData();
+    _notificationCount = NotificationService().unreadCount;
+
+    _notifSubscription = NotificationService().notificationStream.listen((_) {
+      if (!mounted) return;
+      setState(() {
+        _notificationCount = NotificationService().unreadCount;
+      });
+    });
+
+    NotificationService().start();
   }
 
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
+  @override
+  void dispose() {
+    _notifSubscription.cancel();
+    super.dispose();
   }
 
   void loadUserData() async {
@@ -49,6 +62,7 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       _username = userData['username'] ?? '';
       _email = userData['email'] ?? '';
+      _peternak = userData['nama_peternak'] ?? '';
     });
   }
 
@@ -74,7 +88,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   final screenWidth = MediaQuery.of(context).size.width;
 
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(15, 35, 15, 16),
+                    padding: const EdgeInsets.fromLTRB(12, 33, 12, 15),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -143,33 +157,113 @@ class _DashboardPageState extends State<DashboardPage> {
                                     showDialog(
                                       context: context,
                                       builder:
-                                          (context) => AlertDialog(
-                                            title: const Text("Konfirmasi"),
-                                            content: const Text(
-                                              "Apakah Anda yakin ingin logout?",
+                                          (context) => Dialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                             ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () =>
-                                                        Navigator.pop(context),
-                                                child: const Text("Batal"),
-                                              ),
-                                              TextButton(
-                                                onPressed: () async {
-                                                  await UserSession.clearSession();
-                                                  Navigator.pushReplacement(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder:
-                                                          (context) =>
-                                                              LoginPage(),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(20),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.logout,
+                                                    size: 48,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  const Text(
+                                                    "Keluar Aplikasi?",
+                                                    style: TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
-                                                  );
-                                                },
-                                                child: const Text("Logout"),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  const Text(
+                                                    "Apakah Anda yakin ingin keluar dari aplikasi?",
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      color: Colors.black87,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Expanded(
+                                                        child: OutlinedButton(
+                                                          onPressed:
+                                                              () =>
+                                                                  Navigator.pop(
+                                                                    context,
+                                                                  ),
+                                                          child: const Text(
+                                                            "Batal",
+                                                          ),
+                                                          style: OutlinedButton.styleFrom(
+                                                            foregroundColor:
+                                                                Colors
+                                                                    .grey[700],
+                                                            side:
+                                                                const BorderSide(
+                                                                  color:
+                                                                      Colors
+                                                                          .grey,
+                                                                ),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    10,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 10),
+                                                      Expanded(
+                                                        child: ElevatedButton(
+                                                          onPressed: () async {
+                                                            await UserSession.clearSession();
+                                                            Navigator.pushReplacement(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder:
+                                                                    (context) =>
+                                                                        LoginPage(),
+                                                              ),
+                                                            );
+                                                          },
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .redAccent,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    10,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          child: const Text(
+                                                            "Keluar",
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
                                               ),
-                                            ],
+                                            ),
                                           ),
                                     );
                                   },
@@ -200,14 +294,14 @@ class _DashboardPageState extends State<DashboardPage> {
                                       color: Colors.white,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
                                   Text(
-                                    _email.isNotEmpty
-                                        ? _email
-                                        : 'Email belum tersedia',
+                                    _peternak.isNotEmpty
+                                        ? _peternak
+                                        : 'Peternakan belum tersedia',
                                     style: AppTextStyles.subtitle2.copyWith(
                                       color: Colors.white,
                                     ),
+                                    maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
@@ -234,68 +328,6 @@ class _DashboardPageState extends State<DashboardPage> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  // const SizedBox(height: 10),
-                  // Padding(
-                  //   padding: AppPadding.h10,
-                  //   child: Row(
-                  //     children: [
-                  //       Expanded(
-                  //         child: Container(
-                  //           decoration: BoxDecoration(
-                  //             boxShadow: const [
-                  //               BoxShadow(
-                  //                 color: Colors.black38,
-                  //                 blurRadius: 2,
-                  //                 spreadRadius: 1,
-                  //                 offset: Offset(2, 2),
-                  //               ),
-                  //             ],
-                  //             borderRadius: BorderRadius.circular(10),
-                  //           ),
-                  //           child: TextField(
-                  //             decoration: InputStyling.searchBarDashboardStyle,
-                  //             style: const TextStyle(color: Colors.black),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //       const SizedBox(width: 10),
-                  //       GestureDetector(
-                  //         onTap: () {
-                  //           print('Scan icon tapped');
-                  //           Navigator.push(
-                  //             context,
-                  //             MaterialPageRoute(
-                  //               builder: (_) => EartagScannerPage(),
-                  //             ),
-                  //           );
-                  //         },
-                  //         child: Container(
-                  //           height: 50,
-                  //           width: 50,
-                  //           decoration: BoxDecoration(
-                  //             color: Color(0xff042E22),
-                  //             borderRadius: BorderRadius.circular(10),
-                  //             boxShadow: const [
-                  //               BoxShadow(
-                  //                 color: Colors.black38,
-                  //                 blurRadius: 2,
-                  //                 spreadRadius: 1,
-                  //                 offset: Offset(2, 2),
-                  //               ),
-                  //             ],
-                  //           ),
-                  //           child: const Icon(
-                  //             Icons.qr_code_scanner,
-                  //             color: Colors.white,
-                  //             size: 30,
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 10),
-                  const SizedBox(height: 5),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     child: Align(
@@ -319,51 +351,6 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        hasCenterFAB: true,
-      ),
-      floatingActionButton: Listener(
-        onPointerDown: (_) => setState(() => isPressed = true),
-        onPointerUp: (_) {
-          setState(() => isPressed = false);
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => EartagScannerPage()),
-          );
-        },
-        child: AnimatedContainer(
-          duration: Duration(milliseconds: 150),
-          height: isPressed ? 50 : 60,
-          width: isPressed ? 50 : 60,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [Color(0xff042E22).withOpacity(0.85), Color(0xff042E22)],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.document_scanner_outlined,
-            color: Colors.white,
-            size: 30,
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }

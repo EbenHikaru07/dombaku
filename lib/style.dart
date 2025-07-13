@@ -51,76 +51,6 @@ class AppTextStyles {
   );
 }
 
-class DetailDomba {
-  static const TextStyle title = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: Colors.black87,
-  );
-  static const TextStyle value = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 14,
-    color: Colors.black87,
-  );
-}
-
-class RiwayarKawinDomba {
-  static const TextStyle title = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-  );
-  static const TextStyle title2 = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 18,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-  );
-  static const TextStyle subtitle = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 15,
-    color: Colors.white,
-  );
-}
-
-class RekomendasiKawinDomba {
-  static const TextStyle title = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 18,
-    fontWeight: FontWeight.bold,
-    color: Colors.black,
-  );
-  static const TextStyle labeltext = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: Colors.grey,
-  );
-  static const TextStyle subtitle = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-  );
-}
-
-class GridActivityDashboard {
-  static const TextStyle title = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 15,
-    fontWeight: FontWeight.w900,
-    color: Colors.white,
-  );
-
-  static const TextStyle subtitle = TextStyle(
-    fontFamily: 'Exo2',
-    fontSize: 13,
-    color: Colors.white,
-  );
-}
-
 class StartPageText {
   static const TextStyle titleCover = TextStyle(
     fontFamily: 'Exo2',
@@ -189,11 +119,180 @@ class BottomBarTextStyle {
     fontFamily: 'Exo2',
   );
 
-  static const unselectedLabelStyle = TextStyle(
-    color: Colors.grey,
+  static final unselectedLabelStyle = TextStyle(
+    color: Colors.grey.withOpacity(0.8),
     fontWeight: FontWeight.w400,
     fontSize: 12,
     fontFamily: 'Exo2',
+  );
+}
+
+class ManajemenKandangStyle {
+  static const TextStyle title = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+  static const TextStyle title2 = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+  static const TextStyle subtitle = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+  static const TextStyle subtitle2 = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 12,
+    color: Colors.white,
+  );
+  static const TextStyle data = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 13,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+  static const TextStyle dropdown = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 13,
+    fontWeight: FontWeight.bold,
+    color: Colors.black87,
+  );
+  static const TextStyle unknown = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.grey,
+  );
+}
+
+class RiwayatKawinClass {
+  static const TextStyle title = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+  static const TextStyle title2 = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+  static const TextStyle kandang = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+  static const TextStyle status = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    color: Colors.white,
+  );
+  static const TextStyle tanggal = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    color: Colors.white,
+  );
+  static const TextStyle jumlah = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    color: Colors.white,
+  );
+  static const TextStyle data = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    color: Colors.black87,
+  );
+  static const TextStyle unknown = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.grey,
+  );
+}
+
+class DetailDomba {
+  static const TextStyle title = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.black87,
+  );
+  static const TextStyle value = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 14,
+    color: Colors.black87,
+  );
+}
+
+class RekomendasiKawinDomba {
+  static const TextStyle title = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+  static const TextStyle labeltext = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.grey,
+  );
+  static const TextStyle subtitle = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+}
+
+class HasilRekomendasiStyle {
+  static const TextStyle title = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+  static const TextStyle eartag = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+  static const TextStyle persen = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 13,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+  static const TextStyle keterangan = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 12,
+    fontStyle: FontStyle.italic,
+    color: Colors.black54,
+  );
+}
+
+class GridActivityDashboard {
+  static const TextStyle title = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 15,
+    fontWeight: FontWeight.w900,
+    color: Colors.white,
+  );
+
+  static const TextStyle subtitle = TextStyle(
+    fontFamily: 'Exo2',
+    fontSize: 13,
+    color: Colors.white,
   );
 }
 

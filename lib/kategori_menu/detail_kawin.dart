@@ -1,6 +1,7 @@
 import 'package:dombaku/style.dart';
 import 'package:dombaku/styleui/appbarstyle.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class DetailKawinPage extends StatefulWidget {
   final Map<String, dynamic> kandang;
@@ -12,14 +13,17 @@ class DetailKawinPage extends StatefulWidget {
 }
 
 class _DetailKawinPageState extends State<DetailKawinPage> {
+  String formatTanggal(DateTime tanggal) {
+    return DateFormat('dd MMMM yyyy', 'id_ID').format(tanggal);
+  }
+
   @override
   Widget build(BuildContext context) {
     final kandang = widget.kandang;
-    List<String> allDombaIds = [...kandang['idJantan'], ...kandang['idBetina']];
 
     return Scaffold(
-      appBar: CustomAppBar(title: kandang['namaKandang']),
-
+      // appBar: CustomAppBar(title: kandang['namaKandang']),
+      appBar: CustomAppBar(title: 'Detail'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -45,7 +49,7 @@ class _DetailKawinPageState extends State<DetailKawinPage> {
                           Image.asset('assets/images/jantan.png', width: 40),
                           Text(
                             "${kandang['jantan']}",
-                            style: RiwayarKawinDomba.subtitle,
+                            style: RiwayatKawinClass.jumlah,
                           ),
                         ],
                       ),
@@ -53,12 +57,7 @@ class _DetailKawinPageState extends State<DetailKawinPage> {
                         children: [
                           Text(
                             kandang['namaKandang'],
-                            style: RiwayarKawinDomba.title,
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            "Selesai",
-                            style: RiwayarKawinDomba.subtitle,
+                            style: RiwayatKawinClass.kandang,
                           ),
                         ],
                       ),
@@ -67,7 +66,7 @@ class _DetailKawinPageState extends State<DetailKawinPage> {
                           Image.asset('assets/images/betina.png', width: 40),
                           Text(
                             "${kandang['betina']}",
-                            style: RiwayarKawinDomba.subtitle,
+                            style: RiwayatKawinClass.jumlah,
                           ),
                         ],
                       ),
@@ -77,10 +76,13 @@ class _DetailKawinPageState extends State<DetailKawinPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(kandang['mulai'], style: RiwayarKawinDomba.subtitle),
                       Text(
-                        kandang['selesai'],
-                        style: RiwayarKawinDomba.subtitle,
+                        "Mulai: ${formatTanggal(kandang['mulai'])}",
+                        style: RiwayatKawinClass.tanggal,
+                      ),
+                      Text(
+                        "Selesai: ${formatTanggal(kandang['selesai'])}",
+                        style: RiwayatKawinClass.tanggal,
                       ),
                     ],
                   ),
@@ -88,174 +90,105 @@ class _DetailKawinPageState extends State<DetailKawinPage> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text("EARTAG Betina", style: RiwayarKawinDomba.title),
-                Text("EARTAG Jantan", style: RiwayarKawinDomba.title),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children:
-                          kandang['idJantan']
-                              .map<Widget>((id) => Text(id))
-                              .toList(),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFE3F2FD),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "EARTAG Jantan",
+                            style: RiwayatKawinClass.title,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: List<Widget>.from(
+                              (kandang['idJantan'] as List).map(
+                                (id) => Chip(
+                                  label: Text(
+                                    id,
+                                    style: RiwayatKawinClass.data,
+                                  ),
+                                  backgroundColor: Color(0xFF64B5F6),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children:
-                          kandang['idBetina']
-                              .map<Widget>((id) => Text(id))
-                              .toList(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFFCE4EC),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "EARTAG Betina",
+                            style: RiwayatKawinClass.title,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: List<Widget>.from(
+                              (kandang['idBetina'] as List).map(
+                                (id) => Chip(
+                                  label: Text(
+                                    id,
+                                    style: RiwayatKawinClass.data,
+                                  ),
+                                  backgroundColor: Color(0xFFF06292),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade900,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                ),
-                onPressed: () {
-                  _showUpdatePopup(context, allDombaIds);
-                },
-                icon: const Icon(Icons.edit, color: Colors.white),
-                label: const Text("Perbarui", style: RiwayarKawinDomba.title),
+                ],
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  void _showUpdatePopup(BuildContext context, List<String> allDombaIds) {
-    String? selectedDomba;
-    String? selectedStatus;
-    TextEditingController deskripsiController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder:
-          (_) => Dialog(
-            backgroundColor: Colors.white70,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Perbarui Status Domba",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    value: selectedDomba,
-                    hint: const Text("Pilih ID Domba"),
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                    ),
-                    items:
-                        allDombaIds
-                            .map(
-                              (id) =>
-                                  DropdownMenuItem(value: id, child: Text(id)),
-                            )
-                            .toList(),
-                    onChanged: (value) => selectedDomba = value,
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    value: selectedStatus,
-                    hint: const Text("Pilih Status"),
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                    ),
-                    items:
-                        ["Sehat", "Tidak Sehat", "Lainnya"]
-                            .map(
-                              (status) => DropdownMenuItem(
-                                value: status,
-                                child: Text(status),
-                              ),
-                            )
-                            .toList(),
-                    onChanged: (value) => selectedStatus = value,
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: deskripsiController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      hintText: "Masukkan deskripsi...",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                      ),
-                      onPressed: () {
-                        print(
-                          "Domba: $selectedDomba, Status: $selectedStatus, Deskripsi: ${deskripsiController.text}",
-                        );
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        "Simpan",
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
     );
   }
 }

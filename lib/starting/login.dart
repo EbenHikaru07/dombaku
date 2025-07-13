@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dombaku/bottombar/mainscreen.dart';
 import 'package:dombaku/dashboard/dashboard.dart';
 import 'package:dombaku/session/user_session.dart';
 import 'package:dombaku/style.dart';
@@ -103,21 +104,44 @@ class _LoginPageState extends State<LoginPage> {
       if (userQuery.docs.isNotEmpty) {
         final userData = userQuery.docs.first.data();
 
+        if (userData['role'] != 'User') {
+          setState(() => _isLoading = false);
+          showDialog(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+                  title: const Text("Akses Ditolak"),
+                  content: const Text("Hanya 'User' yang dapat login."),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text("Tutup"),
+                    ),
+                  ],
+                ),
+          );
+          return;
+        }
+
         await UserSession.saveUserSession(
           username: userData['username'],
           email: userData['email'],
           role: userData['role'],
           status: userData['status'],
+          peternak: userData['nama_peternak'],
         );
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Login berhasil!")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Login berhasil!"),
+            duration: Duration(seconds: 1),
+          ),
+        );
 
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 1));
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => DashboardPage()),
+          MaterialPageRoute(builder: (context) => MainScreen()),
         );
       } else {
         showDialog(

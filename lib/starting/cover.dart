@@ -36,7 +36,6 @@ class _CoverPageState extends State<CoverPage>
   }
 
   void _onButtonPressed() {
-    // Menambahkan delay agar animasi float selesai sebelum berpindah halaman
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
@@ -51,7 +50,6 @@ class _CoverPageState extends State<CoverPage>
             ).chain(CurveTween(curve: Curves.easeInOut));
             final offsetAnimation = animation.drive(tween);
 
-            // Menggunakan SlideTransition atau bisa juga pakai FadeTransition
             return SlideTransition(position: offsetAnimation, child: child);
           },
         ),

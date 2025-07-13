@@ -1,11 +1,7 @@
+import 'dart:async';
 import 'package:dombaku/styleui/appbarstyle.dart';
 import 'package:flutter/material.dart';
-
-class NotificationItem {
-  final String message;
-
-  NotificationItem({required this.message});
-}
+import 'package:dombaku/dashboard/notification_services.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({Key? key}) : super(key: key);
@@ -15,126 +11,91 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  List<NotificationItem> notifications = [];
+  List<String> localNotifications = [];
+  late StreamSubscription _notifSubscription;
 
   @override
   void initState() {
     super.initState();
-    notifications = [
-      NotificationItem(message: "Domba ID 011 telah dikawinkan"),
-      NotificationItem(message: "Jumlah domba saat ini 50 ekor"),
-      NotificationItem(message: "Domba ID 007 mengalami gejala sakit"),
-      NotificationItem(message: "Domba baru telah ditambahkan"),
-      NotificationItem(message: "Domba ID 023 berhasil dikawinkan"),
-      NotificationItem(message: "Domba ID 005 menunjukkan kesehatan menurun"),
-      NotificationItem(message: "Jumlah domba bertambah menjadi 51 ekor"),
-    ];
-  }
+    NotificationService().markAllAsRead();
+    localNotifications = NotificationService().notifications;
 
-  Icon _getIconByMessage(String message) {
-    if (message.contains("kawin")) {
-      return const Icon(Icons.favorite, color: Colors.pink);
-    } else if (message.contains("sakit") || message.contains("kesehatan")) {
-      return const Icon(Icons.warning_amber, color: Colors.red);
-    } else if (message.contains("Jumlah") ||
-        message.contains("bertambah") ||
-        message.contains("domba baru")) {
-      return const Icon(Icons.pets, color: Colors.green);
-    } else {
-      return const Icon(Icons.notifications, color: Colors.grey);
-    }
-  }
-
-  Color _getCardColor(String message) {
-    if (message.contains("kawin")) {
-      return Colors.pink.shade50;
-    } else if (message.contains("sakit") || message.contains("kesehatan")) {
-      return Colors.red.shade50;
-    } else if (message.contains("Jumlah") ||
-        message.contains("bertambah") ||
-        message.contains("domba baru")) {
-      return Colors.green.shade50;
-    } else {
-      return Colors.grey.shade100;
-    }
-  }
-
-  void _deleteAllNotifications() {
-    setState(() {
-      notifications.clear();
+    // ✅ Simpan subscription agar bisa dicancel saat dispose
+    _notifSubscription = NotificationService().notificationStream.listen((_) {
+      if (!mounted) return; // ✅ Cek apakah masih di tree sebelum setState
+      setState(() {
+        localNotifications = NotificationService().notifications;
+      });
     });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Semua notifikasi dihapus")));
+  }
+
+  @override
+  void dispose() {
+    _notifSubscription
+        .cancel(); // ✅ Batalkan listener untuk menghindari memory leak
+    super.dispose();
+  }
+
+  void _clearNotifications() {
+    NotificationService().clearNotifications();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: "Notifikasi Domba",
-        actions:
-            notifications.isNotEmpty
-                ? [
-                  IconButton(
-                    icon: const Icon(Icons.delete_forever),
-                    tooltip: "Hapus Semua",
-                    onPressed: _deleteAllNotifications,
-                  ),
-                ]
-                : null,
+        title: "Notifikasi Kesehatan Domba",
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            onPressed: _clearNotifications,
+            tooltip: 'Hapus semua notifikasi',
+          ),
+        ],
       ),
-
-      body:
-          notifications.isEmpty
-              ? const Center(child: Text("Tidak ada notifikasi"))
-              : ListView.builder(
-                itemCount: notifications.length,
-                padding: const EdgeInsets.all(12),
-                itemBuilder: (context, index) {
-                  final notif = notifications[index];
-                  return Dismissible(
-                    key: UniqueKey(),
-                    direction: DismissDirection.endToStart,
-                    onDismissed: (direction) {
-                      setState(() {
-                        notifications.removeAt(index);
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Notifikasi dihapus")),
-                      );
-                    },
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      color: Colors.red,
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    child: Card(
-                      color: _getCardColor(notif.message),
+      body: Container(
+        padding: const EdgeInsets.all(16),
+        color: const Color(0xFFF9F9F9),
+        child:
+            localNotifications.isEmpty
+                ? const Center(child: Text("Belum ada notifikasi"))
+                : ListView.builder(
+                  itemCount: localNotifications.length,
+                  itemBuilder: (context, index) {
+                    final item = localNotifications[index];
+                    final lines = item.split('|');
+                    return Card(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 3,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        leading: _getIconByMessage(notif.message),
-                        title: Text(
-                          notif.message,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Notifikasi: ${notif.message}'),
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '🐑 Eartag: ${lines[1]}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
                             ),
-                          );
-                        },
+                            const SizedBox(height: 4),
+                            Text('🩺 Kesehatan: ${lines[2]}'),
+                            Text('📝 Keterangan: ${lines[3]}'),
+                            Text('✏️ Diedit oleh: ${lines[4]}'),
+                            Text('🏷️ Warna Eartag: ${lines[5]}'),
+                            Text('⏰ Waktu: ${lines[6]}'),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
+      ),
     );
   }
 }

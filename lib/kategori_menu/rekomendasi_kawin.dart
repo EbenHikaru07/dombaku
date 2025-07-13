@@ -75,7 +75,7 @@ class _RekomendasiKawinState extends State<RekomendasiKawin> {
           children: [
             const SizedBox(height: 20),
             const Text(
-              "Masukkan ID Domba Jantan:",
+              "Masukkan Eartag Domba Jantan:",
               style: RekomendasiKawinDomba.title,
             ),
             const SizedBox(height: 20),
@@ -85,7 +85,7 @@ class _RekomendasiKawinState extends State<RekomendasiKawin> {
                   child: TextField(
                     controller: idController,
                     decoration: InputDecoration(
-                      labelText: "ID Domba Jantan",
+                      labelText: "Eartag Domba Jantan",
                       labelStyle: RekomendasiKawinDomba.labeltext,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -93,24 +93,22 @@ class _RekomendasiKawinState extends State<RekomendasiKawin> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                InkWell(
-                  onTap: () {
-                    // QR Scanner bisa ditambahkan di sini nanti
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xff042E22),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.qr_code_scanner,
-                      size: 30,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                // const SizedBox(width: 10),
+                // InkWell(
+                //   onTap: () {},
+                //   child: Container(
+                //     padding: const EdgeInsets.all(12),
+                //     decoration: BoxDecoration(
+                //       color: const Color(0xff042E22),
+                //       borderRadius: BorderRadius.circular(10),
+                //     ),
+                //     child: const Icon(
+                //       Icons.qr_code_scanner,
+                //       size: 30,
+                //       color: Colors.white,
+                //     ),
+                //   ),
+                // ),
               ],
             ),
             const SizedBox(height: 20),

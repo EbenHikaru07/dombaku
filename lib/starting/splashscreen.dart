@@ -1,10 +1,14 @@
-// import 'dart:async';
+import 'package:dombaku/bottombar/mainscreen.dart';
 import 'package:flutter/material.dart';
-import 'cover.dart';
+import 'package:dombaku/starting/cover.dart';
+import 'package:dombaku/session/user_session.dart';
+import 'package:dombaku/dashboard/notification_services.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
@@ -16,7 +20,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -34,13 +37,40 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     )..addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const CoverPage()),
-        );
+        _navigateAfterSplash();
       }
     });
 
     _controller.forward();
+  }
+
+  Future<void> _navigateAfterSplash() async {
+    try {
+      await NotificationService().start();
+
+      bool loggedIn = await UserSession.isLoggedIn();
+
+      if (!mounted) return;
+
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('User login status: $loggedIn'),
+      //     duration: Duration(seconds: 2),
+      //   ),
+      // );
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => loggedIn ? const MainScreen() : const CoverPage(),
+
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const CoverPage()),
+      );
+    }
   }
 
   @override
@@ -74,7 +104,7 @@ class _SplashScreenState extends State<SplashScreen>
           child: child,
         );
       },
-      child: Image.asset('assets/images/dombaku.png', width: 200, height: 200),
+      child: child,
     );
   }
 

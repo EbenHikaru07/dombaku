@@ -2,12 +2,16 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dombaku/dashboard/kesehatan/detail_kesehatan.dart';
 import 'package:dombaku/dashboard/pendataan/detail_domba.dart';
 import 'package:dombaku/dashboard/pendataan/edit_status.dart';
+import 'package:dombaku/kategori_menu/rekomendasi_kawin/hasil_rekomendasi.dart';
+import 'package:dombaku/session/user_session.dart';
 import 'package:dombaku/style.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:lottie/lottie.dart';
 
 class EartagScannerPage extends StatefulWidget {
   const EartagScannerPage({Key? key}) : super(key: key);
@@ -24,10 +28,19 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
   bool _isProcessing = false;
   final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
   bool _isFlashOn = false;
+  String? _namaPeternak;
 
   @override
   void initState() {
     super.initState();
+    loadUserSessionAndInitCamera();
+  }
+
+  Future<void> loadUserSessionAndInitCamera() async {
+    final userData = await UserSession.getUserData();
+    setState(() {
+      _namaPeternak = userData['nama_peternak'];
+    });
     initializeCamera();
   }
 
@@ -47,7 +60,7 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
   }
 
   void startAutoScanning() {
-    _scanTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _scanTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!_isProcessing && cameraController.value.isInitialized) {
         _isProcessing = true;
         bool found = await captureAndScan();
@@ -61,6 +74,11 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
   }
 
   Future<bool> captureAndScan() async {
+    if (_namaPeternak == null) {
+      print("Nama peternakan belum tersedia, hentikan proses scan!");
+      return false;
+    }
+
     try {
       final image = await cameraController.takePicture();
       final imageFile = File(image.path);
@@ -148,6 +166,7 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
                 .collection('manajemendomba')
                 .where('eartag', isEqualTo: text)
                 .where('warna_eartag', isEqualTo: colorName)
+                .where('nama_peternak', isEqualTo: _namaPeternak)
                 .get();
 
         for (var doc in snapshot.docs) {
@@ -160,6 +179,7 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
             'induk_jantan': doc['induk_jantan'],
             'induk_betina': doc['induk_betina'],
             'tanggal_lahir': doc['tanggal_lahir'],
+            'nama_peternak': doc['nama_peternak'],
             'bobot_badan': doc['bobot_badan']?.toString() ?? '0',
           });
           matchFound = true;
@@ -281,6 +301,83 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
     );
   }
 
+  Future<void> cekRekomendasiDanNavigasi(
+    BuildContext context,
+    String eartag,
+  ) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 100,
+                height: 100,
+                child: Lottie.asset('assets/animations/LoadingUn.json'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('rekomendasikawin')
+              .where('id_jantan', isEqualTo: eartag)
+              .get();
+
+      Navigator.of(context).pop();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HasilRekomendasiKawin(idDomba: eartag),
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text("Data Tidak Ditemukan"),
+                content: Text(
+                  "Eartag $eartag tidak memiliki data rekomendasi kawin.",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text("Tutup"),
+                  ),
+                ],
+              ),
+        );
+      }
+    } catch (e) {
+      Navigator.of(context).pop();
+
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: Text("Kesalahan"),
+              content: Text("Terjadi kesalahan saat mencari data:\n$e"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text("Tutup"),
+                ),
+              ],
+            ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -307,7 +404,7 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
               print('Gagal restart kamera atau scan: $e');
             }
           },
-          backgroundColor: Colors.grey,
+          backgroundColor: Colors.grey.withOpacity(0.5),
           splashColor: Colors.black26,
           shape: CircleBorder(),
           child: Icon(Icons.refresh, color: Colors.black),
@@ -330,7 +427,10 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
               ),
             ),
           ),
-          title: const Text('Eartag Scanner'),
+          title: const Text(
+            'Eartag Scanner',
+            style: TextStyle(fontFamily: 'Exo2'),
+          ),
           foregroundColor: Colors.white,
           // actions: [
           //   IconButton(
@@ -384,15 +484,16 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
                                 child: Text(
                                   "Belum ada hasil scan.",
                                   style: TextStyle(
+                                    fontFamily: 'Exo2',
                                     fontSize: 16,
-                                    color: Colors.white,
+                                    color: Colors.grey,
                                   ),
                                 ),
                               )
                               : ListView.builder(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
                                 itemCount: scannedResults.length,
                                 itemBuilder: (context, index) {
@@ -403,59 +504,93 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
                                   final isDark = isDarkColor(color);
                                   final kelamin =
                                       item['kelamin']?.toLowerCase() ?? 'n/a';
+                                  final eartag = item['text'] ?? 'N/A';
 
                                   IconData genderIcon;
+                                  Color genderColor;
                                   if (kelamin == 'jantan') {
                                     genderIcon = Icons.male;
+                                    genderColor = Colors.blue;
                                   } else if (kelamin == 'betina') {
                                     genderIcon = Icons.female;
+                                    genderColor = Colors.pink;
                                   } else {
                                     genderIcon = Icons.help_outline;
+                                    genderColor = Colors.grey;
                                   }
 
                                   return Card(
-                                    margin: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    elevation: 3,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(
-                                                flex: 2,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
+                                    elevation: 5,
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 5,
+                                    ),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xff1D679E),
+                                            Color(0xff40C5A2),
+                                          ],
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                        ),
+                                        borderRadius: const BorderRadius.all(
+                                          Radius.circular(16),
+                                        ),
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.5),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Row(
                                                   children: [
-                                                    Row(
-                                                      children: [
-                                                        Container(
-                                                          padding:
-                                                              const EdgeInsets.symmetric(
-                                                                horizontal: 5,
-                                                                vertical: 5,
-                                                              ),
-                                                          decoration: BoxDecoration(
-                                                            color: color,
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  6,
-                                                                ),
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 10,
+                                                            vertical: 6,
                                                           ),
-                                                          child: Text(
-                                                            'Eartag: ${item['text'] ?? 'N/A'}',
+                                                      decoration: BoxDecoration(
+                                                        color: color,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                      ),
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.local_offer,
+                                                            color:
+                                                                isDark
+                                                                    ? Colors
+                                                                        .white
+                                                                    : Colors
+                                                                        .black,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 5,
+                                                          ),
+                                                          Text(
+                                                            eartag,
                                                             style: TextStyle(
-                                                              fontSize: 18,
+                                                              fontFamily:
+                                                                  'Exo2',
+                                                              fontSize: 17,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold,
@@ -467,135 +602,358 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
                                                                           .black,
                                                             ),
                                                           ),
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 8,
-                                                        ),
-                                                        CircleAvatar(
-                                                          radius: 15,
-                                                          backgroundColor:
-                                                              Colors
-                                                                  .grey
-                                                                  .shade300,
-                                                          child: Icon(
-                                                            genderIcon,
-                                                            size: 25,
-                                                            color:
-                                                                kelamin ==
-                                                                        'jantan'
-                                                                    ? Colors
-                                                                        .blue
-                                                                    : kelamin ==
-                                                                        'betina'
-                                                                    ? Colors
-                                                                        .pink
-                                                                    : Colors
-                                                                        .black54,
-                                                          ),
-                                                        ),
-                                                      ],
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    CircleAvatar(
+                                                      radius: 18,
+                                                      // backgroundColor:
+                                                      //     genderColor
+                                                      //         .withOpacity(0.2),
+                                                      backgroundColor: Colors
+                                                          .white
+                                                          .withOpacity(0.7),
+                                                      child: Icon(
+                                                        genderIcon,
+                                                        color: genderColor,
+                                                        size: 25,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
-                                              ),
-
-                                              Expanded(
-                                                flex: 2,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.end,
+                                                Row(
                                                   children: [
-                                                    const Text(
-                                                      'Tanggal Lahir',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey,
+                                                    const SizedBox(width: 5),
+
+                                                    if (kelamin
+                                                            ?.trim()
+                                                            .toLowerCase() ==
+                                                        "jantan")
+                                                      Container(
+                                                        decoration: BoxDecoration(
+                                                          gradient: LinearGradient(
+                                                            colors: [
+                                                              Color(0xff1D679E),
+                                                              Color(0xff40C5A2),
+                                                            ],
+                                                            begin:
+                                                                Alignment
+                                                                    .topLeft,
+                                                            end:
+                                                                Alignment
+                                                                    .bottomRight,
+                                                          ),
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
+                                                        child: IconButton(
+                                                          icon: Icon(
+                                                            Icons
+                                                                .schema_rounded,
+                                                            size: 20,
+                                                          ),
+                                                          color: Colors.white,
+                                                          tooltip:
+                                                              'Rekomendasi Kawin',
+                                                          onPressed: () {
+                                                            if (eartag !=
+                                                                    null &&
+                                                                eartag
+                                                                    .isNotEmpty) {
+                                                              cekRekomendasiDanNavigasi(
+                                                                context,
+                                                                eartag,
+                                                              );
+                                                            }
+                                                          },
+                                                        ),
                                                       ),
-                                                    ),
-                                                    Text(
-                                                      '${item['tanggal_lahir'] ?? 'N/A'}',
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
                                                   ],
                                                 ),
-                                              ),
-                                            ],
-                                          ),
+                                              ],
+                                            ),
 
-                                          const SizedBox(height: 5),
-
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        print(
-                                                          'Lihat Detail Kesehatan',
+                                            const SizedBox(height: 10),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: GestureDetector(
+                                                    onTap: () async {
+                                                      final eartag =
+                                                          item['text']?.trim();
+                                                      if (eartag == null ||
+                                                          eartag.isEmpty) {
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                              'Eartag tidak valid.',
+                                                            ),
+                                                          ),
                                                         );
-                                                      },
-                                                      child: Container(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              vertical: 6,
-                                                              horizontal: 6,
+                                                        return;
+                                                      }
+                                                      try {
+                                                        final snapshot =
+                                                            await FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                  'catatan_kesehatan',
+                                                                )
+                                                                .where(
+                                                                  'eartag',
+                                                                  isEqualTo:
+                                                                      eartag,
+                                                                )
+                                                                .orderBy(
+                                                                  'timestamp',
+                                                                  descending:
+                                                                      true,
+                                                                )
+                                                                .limit(1)
+                                                                .get();
+
+                                                        if (snapshot
+                                                            .docs
+                                                            .isNotEmpty) {
+                                                          final doc =
+                                                              snapshot
+                                                                  .docs
+                                                                  .first;
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder:
+                                                                  (_) =>
+                                                                      DetailKesehatanPage(
+                                                                        document:
+                                                                            doc,
+                                                                      ),
                                                             ),
-                                                        margin:
-                                                            const EdgeInsets.only(
-                                                              right: 6,
-                                                              bottom: 5,
-                                                            ),
-                                                        decoration: BoxDecoration(
-                                                          color:
-                                                              Colors
-                                                                  .green
-                                                                  .shade50,
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                12,
+                                                          );
+                                                        } else {
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                'Data kesehatan eartag "$eartag" tidak ada',
                                                               ),
-                                                        ),
-                                                        child: Row(
-                                                          children: [
-                                                            const Icon(
-                                                              Icons
-                                                                  .health_and_safety,
+                                                              backgroundColor:
+                                                                  Colors.orange,
+                                                            ),
+                                                          );
+                                                        }
+                                                      } catch (e) {
+                                                        print(
+                                                          'Error saat mengambil data kesehatan: $e',
+                                                        );
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              'Terjadi kesalahan: $e',
+                                                            ),
+                                                            backgroundColor:
+                                                                Colors.red,
+                                                          ),
+                                                        );
+                                                      }
+                                                    },
+                                                    child: Container(
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                            right: 4,
+                                                          ),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            10,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            Colors
+                                                                .green
+                                                                .shade50,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          const Icon(
+                                                            Icons
+                                                                .health_and_safety,
+                                                            color: Colors.green,
+                                                          ),
+                                                          const SizedBox(
+                                                            height: 4,
+                                                          ),
+                                                          Text(
+                                                            'Kesehatan',
+                                                            style: TextStyle(
+                                                              fontFamily:
+                                                                  'Exo2',
+                                                              fontSize: 12,
                                                               color:
-                                                                  Colors.green,
+                                                                  Colors
+                                                                      .grey[700],
                                                             ),
-                                                            const SizedBox(
-                                                              width: 12,
-                                                            ),
-                                                            Expanded(
-                                                              child: Text(
-                                                                'Kesehatan: ${item['kesehatan'] ?? 'N/A'}',
-                                                                style:
-                                                                    const TextStyle(
-                                                                      fontSize:
-                                                                          14,
-                                                                    ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
+                                                          ),
+                                                          Text(
+                                                            '${item['kesehatan'] ?? 'N/A'}',
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontFamily:
+                                                                      'Exo2',
+                                                                  fontSize: 14,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                   ),
-                                                  GestureDetector(
-                                                    onTap: () {
+                                                ),
+                                                Expanded(
+                                                  child: Container(
+                                                    margin:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 4,
+                                                        ),
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          10,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          Colors.blue.shade50,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Icon(
+                                                          Icons
+                                                              .house_siding_rounded,
+                                                          color: Colors.blue,
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
+                                                        Text(
+                                                          'Kandang',
+                                                          style: TextStyle(
+                                                            fontFamily: 'Exo2',
+                                                            fontSize: 12,
+                                                            color:
+                                                                Colors
+                                                                    .grey[700],
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          '${item['kandang'] ?? 'N/A'}',
+                                                          style:
+                                                              const TextStyle(
+                                                                fontFamily:
+                                                                    'Exo2',
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Container(
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                          left: 4,
+                                                        ),
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          10,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          Colors.orange.shade50,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Icon(
+                                                          Icons
+                                                              .timelapse_rounded,
+                                                          color: Colors.orange,
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
+                                                        Text(
+                                                          'Lahir',
+                                                          style: TextStyle(
+                                                            fontFamily: 'Exo2',
+                                                            fontSize: 12,
+                                                            color:
+                                                                Colors
+                                                                    .grey[700],
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          '${item['tanggal_lahir'] ?? 'N/A'}',
+                                                          style:
+                                                              const TextStyle(
+                                                                fontFamily:
+                                                                    'Exo2',
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(height: 5.0),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: TextButton.icon(
+                                                    onPressed: () {
                                                       Navigator.push(
                                                         context,
                                                         MaterialPageRoute(
                                                           builder:
                                                               (
-                                                                context,
+                                                                _,
                                                               ) => EditStatusDombaPage(
                                                                 eartag:
                                                                     item['text'] ??
@@ -609,188 +967,132 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
                                                               ),
                                                         ),
                                                       );
+                                                      print(
+                                                        'Edit status domba',
+                                                      );
                                                     },
-
-                                                    child: Container(
+                                                    icon: Icon(
+                                                      Icons.edit,
+                                                      size: 18,
+                                                      color: Colors.white,
+                                                    ),
+                                                    label: Text(
+                                                      "Edit Status",
+                                                      style: TextStyle(
+                                                        fontFamily: 'Exo2',
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                    style: TextButton.styleFrom(
+                                                      backgroundColor: Color(
+                                                        0xFF6C63FF,
+                                                      ),
                                                       padding:
-                                                          const EdgeInsets.all(
-                                                            10,
+                                                          EdgeInsets.symmetric(
+                                                            vertical: 12,
                                                           ),
-                                                      margin:
-                                                          const EdgeInsets.only(
-                                                            bottom: 5,
-                                                          ),
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            Colors
-                                                                .orange
-                                                                .shade100,
+                                                      shape: RoundedRectangleBorder(
                                                         borderRadius:
                                                             BorderRadius.circular(
-                                                              12,
+                                                              10,
                                                             ),
-                                                      ),
-                                                      child: const Icon(
-                                                        Icons.edit,
-                                                        color: Colors.orange,
-                                                        size: 18,
                                                       ),
                                                     ),
                                                   ),
-                                                ],
-                                              ),
+                                                ),
 
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        print(
-                                                          'Lihat Detail Kandang',
-                                                        );
-                                                      },
-                                                      child: Container(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              vertical: 5,
-                                                              horizontal: 5,
-                                                            ),
-                                                        margin:
-                                                            const EdgeInsets.only(
-                                                              bottom: 5,
-                                                              right: 6,
-                                                            ),
-                                                        decoration: BoxDecoration(
-                                                          color:
-                                                              Colors
-                                                                  .blue
-                                                                  .shade50,
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                12,
+                                                SizedBox(width: 8),
+                                                Expanded(
+                                                  child: TextButton.icon(
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                _,
+                                                              ) => DetailDombaPage(
+                                                                eartag:
+                                                                    item['text'] ??
+                                                                    '',
+                                                                nama:
+                                                                    item['text'] ??
+                                                                    '',
+                                                                gender:
+                                                                    item['kelamin'] ??
+                                                                    '',
+                                                                gambar:
+                                                                    (item['kelamin'] ??
+                                                                                    '')
+                                                                                .toLowerCase() ==
+                                                                            'jantan'
+                                                                        ? 'assets/images/jantan.png'
+                                                                        : 'assets/images/betina.png',
+                                                                idIndukJantan:
+                                                                    item['induk_jantan'] ??
+                                                                    '',
+                                                                idIndukBetina:
+                                                                    item['induk_betina'] ??
+                                                                    '',
+                                                                bobot:
+                                                                    item['bobot_badan']
+                                                                        ?.toString() ??
+                                                                    '',
+                                                                kandang:
+                                                                    item['kandang'] ??
+                                                                    '',
+                                                                statusDomba:
+                                                                    item['kesehatan'] ??
+                                                                    '',
+                                                                tanggalLahir:
+                                                                    item['tanggal_lahir'] ??
+                                                                    '',
+                                                                warnaEartag:
+                                                                    item['color'] ??
+                                                                    '',
+                                                                namaPeternak:
+                                                                    item['nama_peternak'] ??
+                                                                    '',
                                                               ),
                                                         ),
-                                                        child: Row(
-                                                          children: [
-                                                            const Icon(
-                                                              Icons.home_work,
-                                                              color:
-                                                                  Colors.blue,
+                                                      );
+                                                      print(
+                                                        'Lihat detail domba',
+                                                      );
+                                                    },
+                                                    icon: Icon(
+                                                      Icons.info_outline,
+                                                      size: 18,
+                                                      color: Colors.white,
+                                                    ),
+                                                    label: Text(
+                                                      "Detail",
+                                                      style: TextStyle(
+                                                        fontFamily: 'Exo2',
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                    style: TextButton.styleFrom(
+                                                      backgroundColor: Color(
+                                                        0xFF00BFA6,
+                                                      ), // teal flat modern
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            vertical: 12,
+                                                          ),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
                                                             ),
-                                                            const SizedBox(
-                                                              width: 12,
-                                                            ),
-                                                            Expanded(
-                                                              child: Text(
-                                                                'Kandang: ${item['kandang'] ?? 'N/A'}',
-                                                                style:
-                                                                    const TextStyle(
-                                                                      fontSize:
-                                                                          14,
-                                                                    ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                  // GestureDetector(
-                                                  //   onTap: () {
-                                                  //     print('Update Kandang');
-                                                  //   },
-                                                  //   child: Container(
-                                                  //     padding:
-                                                  //         const EdgeInsets.all(
-                                                  //           10,
-                                                  //         ),
-                                                  //     margin:
-                                                  //         const EdgeInsets.only(
-                                                  //           bottom: 5,
-                                                  //         ),
-                                                  //     decoration: BoxDecoration(
-                                                  //       color:
-                                                  //           Colors
-                                                  //               .orange
-                                                  //               .shade100,
-                                                  //       borderRadius:
-                                                  //           BorderRadius.circular(
-                                                  //             12,
-                                                  //           ),
-                                                  //     ),
-                                                  //     child: const Icon(
-                                                  //       Icons.edit,
-                                                  //       color: Colors.orange,
-                                                  //       size: 18,
-                                                  //     ),
-                                                  //   ),
-                                                  // ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-
-                                          const SizedBox(height: 5),
-                                          SizedBox(
-                                            width: double.infinity,
-                                            child: actionButton(
-                                              icon: Icons.assignment,
-                                              label: 'Detail Domba',
-                                              colors: [
-                                                const Color(0xff1D679E),
-                                                const Color(0xff40C5A2),
+                                                ),
                                               ],
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder:
-                                                        (
-                                                          context,
-                                                        ) => DetailDombaPage(
-                                                          eartag: item['text']!,
-                                                          nama: item['text']!,
-                                                          gender:
-                                                              item['kelamin'] ??
-                                                              '',
-                                                          gambar:
-                                                              (item['kelamin'] ??
-                                                                              '')
-                                                                          .toLowerCase() ==
-                                                                      'jantan'
-                                                                  ? 'assets/images/jantan.png'
-                                                                  : 'assets/images/betina.png',
-                                                          idIndukJantan:
-                                                              item['induk_jantan'] ??
-                                                              '',
-                                                          idIndukBetina:
-                                                              item['induk_betina'] ??
-                                                              '',
-                                                          bobot:
-                                                              item['bobot_badan'] !=
-                                                                      null
-                                                                  ? item['bobot_badan']
-                                                                      .toString()
-                                                                  : '',
-                                                          kandang:
-                                                              item['kandang'] ??
-                                                              '',
-                                                          statusDomba:
-                                                              item['kesehatan'] ??
-                                                              '',
-                                                          tanggalLahir:
-                                                              item['tanggal_lahir'] ??
-                                                              '',
-                                                          warnaEartag:
-                                                              item['color'] ??
-                                                              '',
-                                                        ),
-                                                  ),
-                                                );
-                                              },
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   );
@@ -799,7 +1101,27 @@ class _EartagScannerPageState extends State<EartagScannerPage> {
                     ),
                   ],
                 )
-                : const Center(child: CircularProgressIndicator()),
+                : Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        height: 100,
+                        child: Lottie.asset('assets/animations/LoadingUn.json'),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Memuat kamera...",
+                        style: TextStyle(
+                          fontFamily: 'Exo2',
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
       ),
     );
   }

@@ -15,9 +15,11 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView> {
   late Timer _timer;
 
   final List<String> imagePaths = [
-    'assets/slide/slidesheep1.png',
+    'assets/slide/slidesheep.jpg',
     'assets/slide/slidesheep2.jpg',
-    'assets/slide/slide3.jpg',
+    'assets/slide/slidesheep3.jpg',
+    'assets/slide/slidesheep4.jpg',
+    'assets/slide/slidesheep5.jpg',
   ];
 
   @override

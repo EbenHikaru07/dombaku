@@ -24,9 +24,9 @@ class _KategoriMenuWidgetState extends State<KategoriMenuWidget> {
 
   final List<IconData> kategoriIcons = [
     Icons.schema_rounded,
-    Icons.manage_search,
-    Icons.checklist_rounded,
-    Icons.task_alt_rounded,
+    Icons.house_siding_rounded,
+    Icons.history_edu_rounded,
+    Icons.article_rounded,
   ];
 
   final List<String> kategoriItemNames = [

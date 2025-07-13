@@ -70,6 +70,7 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
     try {
       final userData = await UserSession.getUserData();
       final username = userData['username'] ?? 'Unknown';
+      final namaPeternak = userData['nama_peternak'] ?? 'Unknown';
 
       await FirebaseFirestore.instance.collection('catatan_kesehatan').add({
         'eartag': widget.eartag,
@@ -78,6 +79,7 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
         'keterangan': deskripsi,
         'timestamp': FieldValue.serverTimestamp(),
         'editby': username,
+        'nama_peternak': namaPeternak,
       });
 
       QuerySnapshot querySnapshot =
@@ -85,6 +87,7 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
               .collection('manajemendomba')
               .where('eartag', isEqualTo: widget.eartag)
               .where('warna_eartag', isEqualTo: widget.warnaEartag)
+              .where('nama_peternak', isEqualTo: namaPeternak)
               .get();
 
       if (querySnapshot.docs.isNotEmpty) {
@@ -95,12 +98,11 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
             .update({'kesehatan': selectedStatus, 'keterangan': deskripsi});
       }
 
-      Navigator.of(context).pop();
-      Navigator.pop(context, selectedStatus);
-      
+      if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.pop(context, selectedStatus);
     } catch (e) {
-      Navigator.of(context).pop();
-      _showErrorDialog("Terjadi kesalahan: $e");
+      if (mounted) Navigator.of(context).pop();
+      if (mounted) _showErrorDialog("Terjadi kesalahan: $e");
     }
   }
 
@@ -128,7 +130,11 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
                 const SizedBox(height: 16),
                 const Text(
                   'Menyimpan data...',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontFamily: 'Exo2',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -202,6 +208,7 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
                     Text(
                       "Eartag Domba: ${widget.eartag}",
                       style: TextStyle(
+                        fontFamily: 'Exo2',
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color:
@@ -216,15 +223,20 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
 
               const SizedBox(height: 20),
 
-              const Text("Pilih Status", style: TextStyle(fontSize: 16)),
+              const Text(
+                "Pilih Status",
+                style: TextStyle(fontFamily: 'Exo2', fontSize: 16),
+              ),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 value: selectedStatus.isNotEmpty ? selectedStatus : null,
                 items: [
                   const DropdownMenuItem(value: '', child: Text("")),
                   ...['Sehat', 'Sakit', 'Mortalitas'].map(
-                    (status) =>
-                        DropdownMenuItem(value: status, child: Text(status)),
+                    (status) => DropdownMenuItem(
+                      value: status,
+                      child: Text(status, style: TextStyle(fontFamily: 'Exo2')),
+                    ),
                   ),
                 ],
                 onChanged: (value) {
@@ -241,13 +253,17 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
 
               const SizedBox(height: 20),
 
-              const Text("Deskripsi", style: TextStyle(fontSize: 16)),
+              const Text(
+                "Deskripsi",
+                style: TextStyle(fontFamily: 'Exo2', fontSize: 16),
+              ),
               const SizedBox(height: 6),
               TextField(
                 controller: _deskripsiController,
                 maxLines: 4,
                 decoration: InputDecoration(
                   hintText: "Masukkan deskripsi terkait kondisi domba...",
+                  hintStyle: TextStyle(fontFamily: 'Exo2'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -271,6 +287,7 @@ class _EditStatusDombaPageState extends State<EditStatusDombaPage> {
                       Text(
                         "Simpan",
                         style: TextStyle(
+                          fontFamily: 'Exo2',
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

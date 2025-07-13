@@ -5,6 +5,7 @@ class UserSession {
   static const String _keyEmail = 'email';
   static const String _keyRole = 'role';
   static const String _keyStatus = 'status';
+  static const String _keyPeternak = 'peternak';
   static const String _keyIsLoggedIn = 'is_logged_in';
 
   static Future<void> saveUserSession({
@@ -12,12 +13,16 @@ class UserSession {
     required String email,
     required String role,
     required String status,
+    String? peternak,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyUsername, username);
     await prefs.setString(_keyEmail, email);
     await prefs.setString(_keyRole, role);
     await prefs.setString(_keyStatus, status);
+    if (peternak != null) {
+      await prefs.setString(_keyPeternak, peternak);
+    }
     await prefs.setBool(_keyIsLoggedIn, true);
   }
 
@@ -33,11 +38,23 @@ class UserSession {
       'email': prefs.getString(_keyEmail),
       'role': prefs.getString(_keyRole),
       'status': prefs.getString(_keyStatus),
+      'nama_peternak': prefs.getString(_keyPeternak),
     };
   }
 
-  static Future<void> clearSession() async {
+  static Future<String?> getRole() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    return prefs.getString(_keyRole);
   }
+
+ static Future<void> clearSession() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove(_keyUsername);
+  await prefs.remove(_keyEmail);
+  await prefs.remove(_keyRole);
+  await prefs.remove(_keyStatus);
+  await prefs.remove(_keyPeternak);
+  await prefs.remove(_keyIsLoggedIn);
+}
+
 }

@@ -1,3 +1,5 @@
+import 'package:dombaku/session/user_session.dart';
+import 'package:dombaku/style.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dombaku/styleui/appbarstyle.dart';
@@ -24,8 +26,24 @@ class _ManajemenKandangState extends State<ManajemenKandang> {
 
   void _fetchKandangData() async {
     try {
+      final userData = await UserSession.getUserData();
+      final String? namaPeternak = userData['nama_peternak'];
+
+      if (namaPeternak == null || namaPeternak.isEmpty) {
+        setState(() {
+          _kandangList = [];
+          _filteredKandangList = [];
+          _isLoading = false;
+        });
+        return;
+      }
+
       final snapshot =
-          await FirebaseFirestore.instance.collection('manajemenkandang').get();
+          await FirebaseFirestore.instance
+              .collection('manajemenkandang')
+              .where('nama_peternak', isEqualTo: namaPeternak)
+              .get();
+
       final List<Map<String, dynamic>> list = [];
 
       for (var doc in snapshot.docs) {
@@ -121,10 +139,7 @@ class _ManajemenKandangState extends State<ManajemenKandang> {
                       children: [
                         const Text(
                           "Filter Status:",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: ManajemenKandangStyle.title,
                         ),
                         DropdownButton<String>(
                           value: _selectedStatus,
@@ -138,7 +153,10 @@ class _ManajemenKandangState extends State<ManajemenKandang> {
                                   .map(
                                     (status) => DropdownMenuItem(
                                       value: status,
-                                      child: Text(status),
+                                      child: Text(
+                                        status,
+                                        style: ManajemenKandangStyle.dropdown,
+                                      ),
                                     ),
                                   )
                                   .toList(),
@@ -171,7 +189,7 @@ class _ManajemenKandangState extends State<ManajemenKandang> {
             const SizedBox(height: 10),
             const Text(
               'Tidak ada data kandang.',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: ManajemenKandangStyle.unknown,
             ),
           ],
         ),
@@ -212,24 +230,20 @@ class _ManajemenKandangState extends State<ManajemenKandang> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.home, color: Colors.black54),
+                      const Icon(
+                        Icons.house_siding_rounded,
+                        color: Colors.white,
+                      ),
                       SizedBox(width: 5.0),
 
                       Text(
                         "${data['namaKandang']}",
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        style: ManajemenKandangStyle.title2,
                       ),
                       const SizedBox(width: 5),
                       Text(
                         "( Max ${data['kapasitas']} )",
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
+                        style: ManajemenKandangStyle.subtitle2,
                       ),
                     ],
                   ),
@@ -245,10 +259,7 @@ class _ManajemenKandangState extends State<ManajemenKandang> {
                     ),
                     child: Text(
                       data['status'],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: ManajemenKandangStyle.subtitle,
                     ),
                   ),
                 ],
@@ -256,11 +267,7 @@ class _ManajemenKandangState extends State<ManajemenKandang> {
               const SizedBox(height: 4),
               const Text(
                 "Domba didalam:",
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: ManajemenKandangStyle.subtitle,
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -280,10 +287,7 @@ class _ManajemenKandangState extends State<ManajemenKandang> {
                         ),
                         child: Text(
                           tag.toString(),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                          ),
+                          style: ManajemenKandangStyle.data,
                         ),
                       );
                     }).toList(),

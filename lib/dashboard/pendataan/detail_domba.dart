@@ -14,6 +14,7 @@ class DetailDombaPage extends StatefulWidget {
   final String kandang;
   final String statusDomba;
   final String warnaEartag;
+  final String namaPeternak;
 
   const DetailDombaPage({
     super.key,
@@ -28,6 +29,7 @@ class DetailDombaPage extends StatefulWidget {
     required this.kandang,
     required this.statusDomba,
     required this.warnaEartag,
+    required this.namaPeternak,
   });
 
   @override
@@ -62,7 +64,7 @@ class _DetailDombaPageState extends State<DetailDombaPage> {
                   bottomRight: Radius.circular(15),
                 ),
                 image: DecorationImage(
-                  image: AssetImage("assets/slide/slidesheep2.jpg"),
+                  image: AssetImage("assets/slide/slidesheep.jpg"),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -202,7 +204,7 @@ class _DetailDombaPageState extends State<DetailDombaPage> {
                           _buildDetailItem(
                             "Eartag Domba",
                             widget.eartag,
-                            Icons.confirmation_number,
+                            Icons.local_offer,
                           ),
                           _buildDetailItem(
                             "Jenis Kelamin",
@@ -229,12 +231,17 @@ class _DetailDombaPageState extends State<DetailDombaPage> {
                           _buildDetailItem(
                             "Bobot Badan",
                             "${widget.bobot} KG",
-                            Icons.scale,
+                            Icons.scale_rounded,
                           ),
                           _buildDetailItem(
                             "Kandang",
                             widget.kandang,
-                            Icons.home,
+                            Icons.house_siding_rounded,
+                          ),
+                          _buildDetailItem(
+                            "Peternakan",
+                            widget.namaPeternak,
+                            Icons.warehouse,
                           ),
                           _buildStatusItem(context),
                         ],

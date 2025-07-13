@@ -1,8 +1,5 @@
+
 import 'package:flutter/material.dart';
-import 'package:dombaku/dashboard/dashboard.dart';
-import 'package:dombaku/dashboard/kesehatan/kesehatan.dart';
-import 'package:dombaku/dashboard/laporan.dart';
-import 'package:dombaku/dashboard/pendataan/pendataan.dart';
 import 'package:dombaku/style.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
@@ -71,7 +68,7 @@ class CustomBottomNavBar extends StatelessWidget {
     required String label,
   }) {
     final isSelected = selectedIndex == index;
-    final color = isSelected ? Colors.white : Colors.grey;
+    final color = isSelected ? Colors.white : Colors.grey.withOpacity(0.8);
     final style =
         isSelected
             ? BottomBarTextStyle.selectedLabelStyle
@@ -82,32 +79,7 @@ class CustomBottomNavBar extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           GestureDetector(
-            onTap: () {
-              onItemTapped(index);
-
-              Widget page;
-              switch (index) {
-                case 0:
-                  page = DashboardPage();
-                  break;
-                case 1:
-                  page = PendataanPage();
-                  break;
-                case 2:
-                  page = LaporanPage();
-                  break;
-                case 3:
-                  page = KesehatanPage();
-                  break;
-                default:
-                  page = DashboardPage();
-              }
-
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => page),
-              );
-            },
+            onTap: () => onItemTapped(index),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -115,6 +87,7 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
+
           if (index != 3 && !(hasCenterFAB && index == 1))
             Positioned(
               right: 0,
