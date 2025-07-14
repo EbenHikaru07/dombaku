@@ -230,13 +230,17 @@ class _DashboardPageState extends State<DashboardPage> {
                                                         child: ElevatedButton(
                                                           onPressed: () async {
                                                             await UserSession.clearSession();
-                                                            Navigator.pushReplacement(
+                                                            Navigator.pushAndRemoveUntil(
                                                               context,
                                                               MaterialPageRoute(
                                                                 builder:
                                                                     (context) =>
                                                                         LoginPage(),
                                                               ),
+                                                              (
+                                                                Route<dynamic>
+                                                                route,
+                                                              ) => false,
                                                             );
                                                           },
                                                           style: ElevatedButton.styleFrom(
