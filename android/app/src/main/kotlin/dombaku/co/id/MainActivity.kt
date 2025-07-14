@@ -1,4 +1,4 @@
-package com.example.dombaku
+package dombaku.co.id
 
 import io.flutter.embedding.android.FlutterActivity
 
